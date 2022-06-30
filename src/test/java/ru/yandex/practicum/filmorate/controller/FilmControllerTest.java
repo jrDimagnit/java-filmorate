@@ -68,7 +68,7 @@ public class FilmControllerTest {
                 () -> mockMvc.perform(post("/films")
                                 .contentType("application/json")
                                 .content(objectMapper.writeValueAsString(film)))
-                        .andExpect(status().isBadRequest())
+                        .andExpect(status().isOk())
                         .andReturn()
         );
         assertTrue(exception.getMessage().contains("Название фильма отсутствует!"));
