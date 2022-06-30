@@ -111,7 +111,7 @@ public class UserControllerTest {
                 () -> mockMvc.perform(put("/users")
                                 .contentType("application/json")
                                 .content(objectMapper.writeValueAsString(user)))
-                        .andExpect(status().isBadRequest())
+                        .andExpect(status().isOk())
                         .andReturn()
         );
         assertTrue(exception.getMessage().contains("Пользователь с данным id не найден!"));
