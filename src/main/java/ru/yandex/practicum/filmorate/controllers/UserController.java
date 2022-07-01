@@ -39,8 +39,6 @@ public class UserController extends Controller<User> {
     public User update(@Valid @RequestBody User user) {
         if (!base.containsKey(user.getId())) {
             throw new ValidationException("Пользователь с данным id не найден!");
-        } else if (user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не может содержать пробелы!");
         } else {
             base.put(user.getId(), user);
             return user;
@@ -49,7 +47,7 @@ public class UserController extends Controller<User> {
 
     @Override
     @DeleteMapping("/users")
-    public void deleteAll(){
+    public void deleteAll() {
         base.clear();
     }
 }
