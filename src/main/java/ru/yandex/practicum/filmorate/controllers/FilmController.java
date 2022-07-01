@@ -2,62 +2,52 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.controllers.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Collection;
 
 @Slf4j
 @RestController
-public class FilmController {
-    private int idFilm;
-    private LocalDate dateBefore = LocalDate.of(1895, 12, 28);
-    private HashMap<Integer, Film> films = new HashMap<>();
+public class FilmController extends Controller<Film> {
 
+    private final LocalDate checkDate = LocalDate.of(1895, 12, 28);
+
+    @Override
     @GetMapping("/films")
-    public List<Film> getAllFilm() {
-        List<Film> reqList = new ArrayList<>();
-        for (Film film : films.values()) {
-            reqList.add(film);
-        }
-        return reqList;
+    public Collection<Film> getAll() {
+        return super.getAll();
     }
 
+    @Override
     @PostMapping("/films")
-    public Film createFilm(@RequestBody Film film) {
-        if (film.getName().isEmpty()) {
-            throw new ValidationException("Название фильма отсутствует!");
-        } else if (film.getReleaseDate().isBefore(dateBefore)) {
+    public Film create(@Valid @RequestBody Film film) {
+        if (film.getReleaseDate().isBefore(checkDate)) {
             throw new ValidationException("Указанна неверная дата!");
-        } else if (film.getDescription().length() > 200) {
-            throw new ValidationException("Описание не должно превышать 200 символов!");
-        } else if (film.getDuration() < 0) {
-            throw new ValidationException("Продолжительность не может быть отрицательной!");
         } else {
-            ++idFilm;
-            film.setId(idFilm);
-            films.put(idFilm, film);
+            film.setId(++id);
+            base.put(id, film);
             return film;
         }
     }
 
+    @Override
     @PutMapping("/films")
-    public Film updateFilm(@RequestBody Film film) {
-        if (film.getName().isEmpty()) {
-            throw new ValidationException("Название фильма отсутствует!");
-        } else if (film.getReleaseDate().isBefore(dateBefore)) {
+    public Film update(@Valid @RequestBody Film film) {
+        if (!base.containsKey(film.getId())) {
+            throw new ValidationException("Фильма с таким id не найден!");
+        } else if (film.getReleaseDate().isBefore(checkDate)) {
             throw new ValidationException("Указанна неверная дата!");
-        } else if (film.getDescription().length() > 200) {
-            throw new ValidationException("Описание не должно превышать 200 символов!");
-        } else if (film.getDuration() < 0) {
-            throw new ValidationException("Продолжительность не может быть отрицательной!");
-        } else if (!films.containsKey(film.getId())) {
-            throw new ValidationException("Фильма с таким id не найдено!");
         } else {
-            films.put(film.getId(), film);
+            base.put(film.getId(), film);
             return film;
         }
+    }
+    @Override
+    @DeleteMapping("/films")
+    public void deleteAll(){
+        base.clear();
     }
 }

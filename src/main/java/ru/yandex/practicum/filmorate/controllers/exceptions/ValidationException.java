@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.controllers;
+package ru.yandex.practicum.filmorate.controllers.exceptions;
 
 public class ValidationException extends RuntimeException {
 

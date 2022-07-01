@@ -2,61 +2,54 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.controllers.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import javax.validation.Valid;
+import java.util.Collection;
 
 @Slf4j
 @RestController
-public class UserController {
-    private int idUser;
-    private HashMap<Integer, User> users = new HashMap<>();
+public class UserController extends Controller<User> {
 
+    @Override
     @GetMapping("/users")
-    public List<User> getAllUsers() {
-        List<User> reqList = new ArrayList<>();
-        for (User user : users.values()) {
-            reqList.add(user);
-        }
-        return reqList;
+    public Collection<User> getAll() {
+        return super.getAll();
     }
 
+    @Override
     @PostMapping("/users")
-    public User createUser(@RequestBody User user) {
+    public User create(@Valid @RequestBody User user) {
         if (user.getLogin().contains(" ") || user.getLogin().isEmpty()) {
             throw new ValidationException("Логин не может содержать пробелы!");
-        } else if (!user.getEmail().contains("@")) {
-            throw new ValidationException("Email не соответствует!");
-        } else if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Дата рождения не может быть в будущем!");
         } else {
-            ++idUser;
             if (user.getName() == null || user.getName().isEmpty()) {
                 user.setName(user.getLogin());
             }
-            user.setId(idUser);
-            users.put(idUser, user);
+            user.setId(++id);
+            base.put(id, user);
             return user;
         }
     }
 
+    @Override
     @PutMapping("/users")
-    public User updateUser(@RequestBody User user) {
-        if (user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не может содержать пробелы!");
-        } else if (!users.containsKey(user.getId())) {
+    public User update(@Valid @RequestBody User user) {
+        if (!base.containsKey(user.getId())) {
             throw new ValidationException("Пользователь с данным id не найден!");
-        } else if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Дата рождения не может быть в будущем!");
-        } else if (user.getEmail().isEmpty() && !user.getEmail().contains("@")) {
-            throw new ValidationException("Неправильно указан email!");
+        } else if (user.getLogin().contains(" ")) {
+            throw new ValidationException("Логин не может содержать пробелы!");
         } else {
-            users.put(user.getId(), user);
+            base.put(user.getId(), user);
             return user;
         }
+    }
+
+    @Override
+    @DeleteMapping("/users")
+    public void deleteAll(){
+        base.clear();
     }
 }
