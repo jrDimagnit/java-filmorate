@@ -18,8 +18,8 @@ public class User {
     @NonNull
     @NotEmpty
     @Email
-    @Pattern(regexp ="^\\S*$")
     private final String email;
+    @Pattern(regexp ="^\\S*$")
     private final String login;
     @Past
     private final LocalDate birthday;
