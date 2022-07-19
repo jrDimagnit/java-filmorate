@@ -8,23 +8,23 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
-public class FilmService {
+public class FilmService implements BaseService<Film> {
     FilmStorage filmStorage;
-    private final LocalDate checkDate = LocalDate.of(1895, 12, 28);
+    final LocalDate checkDate = LocalDate.of(1895, 12, 28);
 
     FilmService(FilmStorage filmStorage) {
         this.filmStorage = filmStorage;
     }
 
+    @Override
     public Collection<Film> getAll() {
         return filmStorage.getAll().values();
     }
 
+    @Override
     public Film getById(Long id) {
         if (filmStorage.getAll().containsKey(id)) {
             return filmStorage.getById(id);
@@ -33,6 +33,7 @@ public class FilmService {
         }
     }
 
+    @Override
     public Film create(Film film) {
         if (film.getReleaseDate().isBefore(checkDate)) {
             throw new ValidationException("Указанна неверная дата!");
@@ -41,6 +42,7 @@ public class FilmService {
         }
     }
 
+    @Override
     public Film update(Film film) {
         if (film.getId() <= 0 || !filmStorage.getAll().containsKey(film.getId())) {
             throw new NotFoundException("Фильм не найден!");
@@ -51,6 +53,7 @@ public class FilmService {
         }
     }
 
+    @Override
     public void deleteAll() {
         filmStorage.deleteAll();
     }
@@ -59,10 +62,7 @@ public class FilmService {
         if (idFilm <= 0 || !filmStorage.getAll().containsKey(idFilm) || idUser <= 0) {
             throw new NotFoundException("Фильм не найден!");
         } else {
-            Film film = filmStorage.getAll().get(idFilm);
-            film.getLikes().add(idUser);
-            Set<Long> checkSet = film.getLikes();
-            System.out.println(checkSet);
+            filmStorage.getAll().get(idFilm).getLikes().add(idUser);
         }
     }
 
@@ -75,12 +75,7 @@ public class FilmService {
     }
 
     public Set<Film> getTopFilm(Integer count) {
-        Set<Film> checkFilm = filmStorage.getAll().values().stream()
-                .sorted((Comparator.comparingInt(o -> -o.getLikes().size())))
-                .limit(count)
-                .collect(Collectors.toSet());
-        System.out.println(checkFilm);
-        return checkFilm;
+        return filmStorage.getTopFilm(count);
     }
 }
 

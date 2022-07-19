@@ -15,8 +15,7 @@ public class User {
     private Set<Long> friends = new HashSet<>();
     private String name;
     private Long id;
-    @NonNull
-    @NotEmpty
+    @NotBlank
     @Email
     private final String email;
     @Pattern(regexp = "^\\S*$")

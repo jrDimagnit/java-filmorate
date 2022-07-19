@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import ru.yandex.practicum.filmorate.models.User;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 public interface UserStorage {
@@ -14,4 +15,6 @@ public interface UserStorage {
     User update(User user);
 
     void deleteAll();
+
+    Collection<User> getCommonFriend(Long id1, Long id2);
 }
