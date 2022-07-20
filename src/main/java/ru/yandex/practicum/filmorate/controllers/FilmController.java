@@ -2,52 +2,66 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.controllers.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.models.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Set;
 
 @Slf4j
 @RestController
-public class FilmController extends Controller<Film> {
+@RequestMapping("/films")
+public class FilmController {
 
-    private final LocalDate checkDate = LocalDate.of(1895, 12, 28);
+    FilmService filmService;
 
-    @Override
-    @GetMapping("/films")
-    public Collection<Film> getAll() {
-        return super.getAll();
+    FilmController(FilmService filmService) {
+        this.filmService = filmService;
     }
 
-    @Override
-    @PostMapping("/films")
+    @GetMapping()
+    public Collection<Film> getAllFilms() {
+        return filmService.getAll();
+    }
+
+    @GetMapping("/{filmId}")
+    public Film getById(@PathVariable Long filmId) {
+        return filmService.getById(filmId);
+    }
+
+    @GetMapping("/popular")
+    public Set<Film> getTopFilm(@RequestParam(required = false) Integer count) {
+        if (count == null) {
+            return filmService.getTopFilm(10);
+        } else {
+            return filmService.getTopFilm(count);
+        }
+    }
+
+    @PostMapping()
     public Film create(@Valid @RequestBody Film film) {
-        if (film.getReleaseDate().isBefore(checkDate)) {
-            throw new ValidationException("Указанна неверная дата!");
-        } else {
-            film.setId(++id);
-            base.put(id, film);
-            return film;
-        }
+        return filmService.create(film);
     }
 
-    @Override
-    @PutMapping("/films")
+    @PutMapping()
     public Film update(@Valid @RequestBody Film film) {
-        if (!base.containsKey(film.getId())) {
-            throw new ValidationException("Фильма с таким id не найден!");
-        } else if (film.getReleaseDate().isBefore(checkDate)) {
-            throw new ValidationException("Указанна неверная дата!");
-        } else {
-            base.put(film.getId(), film);
-            return film;
-        }
+        return filmService.update(film);
     }
-    @Override
-    @DeleteMapping("/films")
-    public void deleteAll(){
-        base.clear();
+
+    @PutMapping("/{id}/like/{userId}")
+    public void addFilmLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void deleteFilmLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.deleteLike(id, userId);
+    }
+
+
+    @DeleteMapping()
+    public void deleteAll() {
+        filmService.deleteAll();
     }
 }

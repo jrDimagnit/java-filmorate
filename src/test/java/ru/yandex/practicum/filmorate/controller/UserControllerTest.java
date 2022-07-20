@@ -5,29 +5,30 @@ import com.google.gson.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import ru.yandex.practicum.filmorate.controllers.UserController;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.models.User;
 import java.time.LocalDate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = UserController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
-@AfterEach
- void clean() throws Exception{
-    MvcResult mvcResult = mockMvc.perform(delete("/users"))
-            .andExpect(status().isOk())
-            .andReturn();
-}
+    @AfterEach
+    void clean() throws Exception{
+        MvcResult mvcResult = mockMvc.perform(delete("/users"))
+                .andExpect(status().isOk())
+                .andReturn();
+    }
 
     @Test
     public void getUser() throws Exception {
@@ -57,7 +58,7 @@ public class UserControllerTest {
                 .andReturn();
         JsonElement jsonElement = JsonParser.parseString(mvcResult.getResponse().getContentAsString());
         JsonObject jsonObject = jsonElement.getAsJsonObject();
-        updateUser.setId(jsonObject.get("id").getAsInt());
+        updateUser.setId(jsonObject.get("id").getAsLong());
         mockMvc.perform(put("/users")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(updateUser)))
@@ -70,41 +71,42 @@ public class UserControllerTest {
     public void addUserWithAbnormalEmail() throws Exception {
         User user = new User("nameya.ru", "name", LocalDate.of(2000, 10, 11));
         mockMvc.perform(post("/users")
-                                .contentType("application/json")
-                                .content(objectMapper.writeValueAsString(user)))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isInternalServerError())
+                .andReturn();
     }
 
     @Test
     public void addUserWithIncorrectDate() throws Exception {
         User user = new User("name@ya.ru", "name", LocalDate.of(2033, 10, 11));
         mockMvc.perform(post("/users")
-                                .contentType("application/json")
-                                .content(objectMapper.writeValueAsString(user)))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isInternalServerError())
+                .andReturn();
 
     }
 
     @Test
     public void addUserWithIncorrectLogin() throws Exception {
         User user = new User("name@ya.ru", "na me", LocalDate.of(2033, 10, 11));
-         mockMvc.perform(post("/users")
-                                .contentType("application/json")
-                                .content(objectMapper.writeValueAsString(user)))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+        mockMvc.perform(post("/users")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isInternalServerError())
+                .andReturn();
     }
 
     @Test
     public void updateUserWithIncorrectId() throws Exception {
         User user = new User("name@ya.ru", "name", LocalDate.of(2033, 10, 11));
-        user.setId(3);
+        user.setId(3L);
         MvcResult mvcResult = mockMvc.perform(put("/users")
-                                .contentType("application/json")
-                                .content(objectMapper.writeValueAsString(user)))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isInternalServerError())
+                .andReturn();
     }
 }
+

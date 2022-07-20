@@ -2,8 +2,8 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.controllers.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.models.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 
 import javax.validation.Valid;
@@ -11,43 +11,56 @@ import java.util.Collection;
 
 @Slf4j
 @RestController
-public class UserController extends Controller<User> {
+@RequestMapping("/users")
+public class UserController {
+    UserService userService;
 
-    @Override
-    @GetMapping("/users")
-    public Collection<User> getAll() {
-        return super.getAll();
+    UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    @Override
-    @PostMapping("/users")
+    @GetMapping
+    public Collection<User> getAllUsers() {
+        return userService.getAll();
+    }
+
+    @GetMapping("/{id}")
+    public User getById(@PathVariable Long id) {
+        return userService.getById(id);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> getFriends(@PathVariable Long id) {
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        return userService.getCommonFriend(id, otherId);
+    }
+
+    @PostMapping
     public User create(@Valid @RequestBody User user) {
-        if (user.getLogin().contains(" ") || user.getLogin().isEmpty()) {
-            throw new ValidationException("Логин не может содержать пробелы!");
-        } else {
-            if (user.getName() == null || user.getName().isEmpty()) {
-                user.setName(user.getLogin());
-            }
-            user.setId(++id);
-            base.put(id, user);
-            return user;
-        }
+        return userService.create(user);
     }
 
-    @Override
-    @PutMapping("/users")
+    @PutMapping
     public User update(@Valid @RequestBody User user) {
-        if (!base.containsKey(user.getId())) {
-            throw new ValidationException("Пользователь с данным id не найден!");
-        } else {
-            base.put(user.getId(), user);
-            return user;
-        }
+        return userService.update(user);
     }
 
-    @Override
-    @DeleteMapping("/users")
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void deleteFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        userService.deleteFriend(id, friendId);
+    }
+
+    @DeleteMapping
     public void deleteAll() {
-        base.clear();
+        userService.deleteAll();
     }
 }

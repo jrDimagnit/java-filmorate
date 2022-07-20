@@ -5,25 +5,21 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.util.NestedServletException;
-import ru.yandex.practicum.filmorate.controllers.FilmController;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.models.Film;
 
 import java.time.LocalDate;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = FilmController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -65,7 +61,7 @@ public class FilmControllerTest {
                 .andReturn();
         JsonElement jsonElement = JsonParser.parseString(mvcResult.getResponse().getContentAsString());
         JsonObject jsonObject = jsonElement.getAsJsonObject();
-        film1.setId(jsonObject.get("id").getAsInt());
+        film1.setId(jsonObject.get("id").getAsLong());
         mockMvc.perform(put("/films")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(film1)))
@@ -78,33 +74,30 @@ public class FilmControllerTest {
     public void addFilmWithoutName() throws Exception {
         Film film = new Film("", "info", LocalDate.of(2000, 10, 11), 100);
         mockMvc.perform(post("/films")
-                                .contentType("application/json")
-                                .content(objectMapper.writeValueAsString(film)))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().isInternalServerError())
+                .andReturn();
     }
 
     @Test
     public void addFilmWithIncorrectDate() throws Exception {
         Film film = new Film("name", "info", LocalDate.of(1700, 10, 11), 100);
-        final NestedServletException exception = assertThrows(NestedServletException.class,
-                () -> mockMvc.perform(post("/films")
+        mockMvc.perform(post("/films")
                                 .contentType("application/json")
                                 .content(objectMapper.writeValueAsString(film)))
                         .andExpect(status().isBadRequest())
-                        .andReturn()
-        );
-        assertTrue(exception.getMessage().contains("Указанна неверная дата!"));
+                        .andReturn();
     }
 
     @Test
     public void addFilmWithAbnormalDuration() throws Exception {
         Film film = new Film("name", "info", LocalDate.of(2000, 10, 11), -100);
         mockMvc.perform(post("/films")
-                                .contentType("application/json")
-                                .content(objectMapper.writeValueAsString(film)))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().isInternalServerError())
+                .andReturn();
     }
 
     @Test
@@ -113,24 +106,21 @@ public class FilmControllerTest {
         String j = String.join("-", dis);
         Film film = new Film("name", j, LocalDate.of(2000, 10, 11), -100);
         mockMvc.perform(post("/films")
-                                .contentType("application/json")
-                                .content(objectMapper.writeValueAsString(film)))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().isInternalServerError())
+                .andReturn();
     }
 
     @Test
     public void updateFilmWithIncorrectId() throws Exception {
         Film film = new Film("name", "info", LocalDate.of(2000, 10, 11), 100);
-        film.setId(3);
-        final NestedServletException exception = assertThrows(NestedServletException.class,
-                () -> mockMvc.perform(put("/films")
+        film.setId(3L);
+        mockMvc.perform(put("/films")
                                 .contentType("application/json")
                                 .content(objectMapper.writeValueAsString(film)))
-                        .andExpect(status().isBadRequest())
-                        .andReturn()
-        );
-        assertTrue(exception.getMessage().contains("id не найден!"));
+                        .andExpect(status().isNotFound())
+                        .andReturn();
     }
 
 }
