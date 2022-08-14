@@ -59,8 +59,4 @@ public class UserController {
         userService.deleteFriend(id, friendId);
     }
 
-    @DeleteMapping
-    public void deleteAll() {
-        userService.deleteAll();
-    }
 }
