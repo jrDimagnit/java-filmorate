@@ -10,8 +10,6 @@ public interface BaseService<T> {
 
     T getById(Long id);
 
-    void deleteAll();
-
     Collection<T> getAll();
 
 }
